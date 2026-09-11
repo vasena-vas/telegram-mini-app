@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LUMOO — Mini App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Onest:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#3ec0cd;
+    --teal-ink:#2596a3;
+    --ink:#1b2a30;
+    --body2:#5c6c72;
+    --mut:#8c9ca2;
+    --line:#e9eef0;
+    --tealbg:#eef8f9;
+    --bg:#ffffff;
+    --no:#b3574f;
+    --shadow-card:0 6px 20px rgba(27,42,48,.06);
+    --shadow-soft:0 16px 40px rgba(27,42,48,.10);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#dde2e4;font-family:'Manrope',sans-serif;touch-action:pan-y;}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;overflow-x:hidden;box-shadow:0 0 50px rgba(0,0,0,.1);}
+  .screen{display:none;padding-bottom:32px;animation:fadein .3s ease;}
+  .screen.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);}
+
+  .home-dark{background:radial-gradient(130% 90% at 50% 0%, #26434e 0%, var(--ink) 48%, #0e161a 100%);padding:34px 0 30px;text-align:center;min-height:100vh;position:relative;overflow:hidden;}
+  .home-dark::before{content:'';position:absolute;top:-40%;left:-20%;width:140%;height:140%;background:radial-gradient(circle at 30% 20%, rgba(62,192,205,.08) 0%, transparent 70%);pointer-events:none;}
+  .home-top .word{font-family:'Onest',sans-serif;font-weight:800;font-size:36px;color:#fff;letter-spacing:.02em;text-shadow:0 4px 20px rgba(62,192,205,.15);}
+  .home-top .sub{font-size:11px;letter-spacing:.2em;color:#8fe0e8;text-transform:uppercase;margin-top:8px;font-weight:700;}
+  .showcase{position:relative;height:420px;margin-top:6px;}
+  .stage-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;height:280px;background:radial-gradient(ellipse at center, rgba(126,222,232,.28) 0%, rgba(126,222,232,0) 70%);filter:blur(4px);}
+  .bottle-img{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(1);width:auto;height:95%;max-height:420px;object-fit:contain;
+    filter:drop-shadow(0 24px 40px rgba(0,0,0,.6)) drop-shadow(0 0 30px rgba(62,192,205,.15));
+    animation: bottleFloat 6s ease-in-out infinite, glowPulse 6s ease-in-out infinite;
+    transition:transform .2s;
+  }
+  @keyframes bottleFloat{0%,100%{ transform: translate(-50%,-50%) scale(1) rotate(0deg) translateY(0); }50%{ transform: translate(-50%,-50%) scale(1.08) rotate(3deg) translateY(-30px); }}
+  @keyframes glowPulse{0%,100%{ filter: drop-shadow(0 24px 40px rgba(0,0,0,.6)) drop-shadow(0 0 30px rgba(62,192,205,.25)) drop-shadow(0 0 60px rgba(62,192,205,.15)); }50%{ filter: drop-shadow(0 24px 40px rgba(0,0,0,.6)) drop-shadow(0 0 50px rgba(62,192,205,.5)) drop-shadow(0 0 100px rgba(62,192,205,.25)); }}
+  .reflect-wrap{position:absolute;top:calc(50% + 140px);left:50%;transform:translateX(-50%);width:220px;height:90px;overflow:hidden;opacity:.25;z-index:1;pointer-events:none;}
+  .reflect-wrap img{position:absolute;top:0;left:50%;transform:translateX(-50%) scaleY(-1);height:350px;width:auto;-webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.5), transparent 85%);mask-image:linear-gradient(to bottom, rgba(0,0,0,.5), transparent 85%);filter:blur(2px);}
+  .floor-glow{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:96%;height:60px;background:radial-gradient(ellipse at center, rgba(126,222,232,.18) 0%, rgba(126,222,232,0) 75%);}
+
+  .carousel-wrap{width:100%;padding:40px 30px 20px;margin-top:30px;overflow:hidden;position:relative;touch-action:pan-y;}
+  .carousel-track{display:flex;gap:12px;transition:transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);will-change:transform;touch-action:pan-y;}
+  .carousel-card{flex:0 0 80%;background:rgba(255,255,255,.04);border:1px solid rgba(126,222,232,.12);box-shadow:0 8px 24px rgba(0,0,0,.2);border-radius:24px;padding:16px 14px 12px;text-align:center;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;transition:transform .15s ease, box-shadow .2s, border-color .4s;touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+  .carousel-card:active{transform:scale(.94);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  .carousel-card .ic-circle{width:40px;height:40px;border-radius:50%;border:1.4px solid rgba(126,222,232,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;background:rgba(126,222,232,.06);transition:background .2s;}
+  .carousel-card .ic-circle svg{width:18px;height:18px;stroke:#8fe0e8;stroke-width:1.6;}
+  .carousel-card h4{font-family:'Onest',sans-serif;font-weight:700;font-size:14px;color:#fff;margin:0 0 4px;line-height:1.2;text-shadow:0 1px 4px rgba(0,0,0,.3);}
+  .carousel-card p{font-size:11px;color:#94aaaf;margin:0 0 10px;line-height:1.3;}
+  .carousel-card .arrow-btn{width:28px;height:28px;border-radius:50%;border:1.2px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;margin:0 auto;transition:border-color .2s;}
+  .carousel-card .arrow-btn svg{width:12px;height:12px;stroke:#cfe9ec;}
+  .carousel-card.active-card:not(.accent){border-color: rgba(126,222,232,.6);box-shadow: 0 0 30px rgba(62,192,205,.25), 0 8px 24px rgba(0,0,0,.3);}
+  .carousel-card.accent{background:rgba(18,48,56,.85);border:1.5px solid rgba(126,222,232,.8);box-shadow:0 0 40px rgba(62,192,205,.45),0 16px 32px rgba(0,0,0,.6);padding:24px 14px 14px;animation:cardAppear .6s ease backwards .3s, pulseGlow 4s ease-in-out infinite;}
+  .carousel-card.accent .tag-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#eaf9fb,#cceef1);color:var(--teal-ink);font-size:8.5px;font-weight:800;letter-spacing:.06em;padding:5px 14px;border-radius:100px;text-transform:uppercase;white-space:nowrap;box-shadow:0 2px 12px rgba(62,192,205,.25);}
+  .carousel-card.accent .ic-circle{width:48px;height:48px;background:rgba(126,222,232,.2);border-color:rgba(126,222,232,.8);}
+  .carousel-card.accent .ic-circle svg{width:22px;height:22px;fill:#fff;stroke:none;}
+  .carousel-card.accent h4{font-size:16px;margin-bottom:4px;color:#fff;}
+  .carousel-card.accent p{font-size:11px;color:#c3dde0;margin-bottom:10px;}
+  .carousel-card.accent .cta-pill{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(126,222,232,.15);border:1px solid rgba(126,222,232,.6);border-radius:100px;padding:8px 12px;font-size:11px;font-weight:700;color:#fff;transition:background .2s;margin:0 auto;width:fit-content;}
+  .carousel-card.accent .cta-pill:active{background:rgba(126,222,232,.3);}
+  .carousel-card.accent .cta-pill svg{width:12px;height:12px;stroke:#fff;}
+  @keyframes pulseGlow{0%,100%{box-shadow:0 0 30px rgba(62,192,205,.35),0 16px 32px rgba(0,0,0,.6);}50%{box-shadow:0 0 60px rgba(62,192,205,.6),0 16px 32px rgba(0,0,0,.6);}}
+  .carousel-indicators{display:flex;justify-content:center;gap:8px;padding:12px 0 4px;}
+  .carousel-indicators .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:.2s;cursor:pointer;}
+  .carousel-indicators .dot.active{background:var(--teal);width:20px;border-radius:100px;}
+  .home-bottom .word2{font-family:'Onest',sans-serif;font-weight:700;font-size:21px;color:#fff;letter-spacing:.08em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
+  .home-bottom .desc{font-size:12px;color:#fff;margin-top:6px;line-height:1.5;text-transform:uppercase;letter-spacing:.04em;}
+  .home-bottom .vol-pill{display:inline-block;margin-top:12px;border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:6px 18px;font-size:11px;color:#fff;font-weight:700;letter-spacing:.06em;backdrop-filter:blur(4px);background:rgba(255,255,255,.04);}
+
+  .dark-page{background:radial-gradient(130% 90% at 50% 0%, #26434e 0%, var(--ink) 48%, #0e161a 100%);color:#fff;min-height:100vh;}
+  .dark-page .topbar h2{color:#fff;}
+  .dark-page .back-btn{background:rgba(255,255,255,.06);color:#8fe0e8;}
+  .dark-page .section-title{color:#fff;}
+  .dark-page .section-sub{color:#bfd4d9;}
+  .dark-page .photo-slot{background:rgba(255,255,255,.04);border:1px solid rgba(126,222,232,.1);}
+  .dark-page .photo-slot img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+  .dark-page .step-text h4{color:#fff;}
+  .dark-page .step-text p{color:#bfd4d9;}
+  .dark-page .info-block{border-bottom-color:rgba(255,255,255,.08);}
+  .dark-page .info-block h4{color:#fff;}
+  .dark-page .info-block p{color:#bfd4d9;}
+  .dark-page .info-block.callout{background:rgba(62,192,205,.08);border-left-color:var(--teal);}
+  .dark-page .info-block.callout h4{color:var(--teal);}
+  .dark-page .cta{background:var(--teal);color:var(--ink);}
+  .dark-page .cta.secondary{background:rgba(255,255,255,.06);color:#8fe0e8;border:1px solid rgba(126,222,232,.2);}
+  .dark-page .cta:active{opacity:.8;}
+  .dark-page .q-title{color:#fff;}
+  .dark-page .q-option{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);color:#fff;}
+  .dark-page .q-option:active{border-color:var(--teal);background:rgba(62,192,205,.12);}
+  .dark-page .q-option .dot{border-color:rgba(255,255,255,.2);}
+  .dark-page .q-option:active .dot{border-color:var(--teal);background:var(--teal);}
+  .dark-page .result-oneliner{background:rgba(62,192,205,.12);color:var(--teal);}
+  .dark-page .dodont .col.yes h5{color:var(--teal);}
+  .dark-page .dodont .col.no h5{color:var(--no);}
+  .dark-page .dodont li{color:#e5f0f2;}
+  .dark-page .dodont li svg{stroke:currentColor;}
+  .dark-page .toggle-row span{color:#fff;}
+  .dark-page .switch{background:rgba(255,255,255,.15);}
+  .dark-page .switch.on{background:var(--teal);}
+  .dark-page .article-card{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06);}
+  .dark-page .article-card h4{color:#fff;}
+  .dark-page .article-card p{color:#bfd4d9;}
+  .dark-page .article-card .meta{color:#8c9ca2;}
+  .dark-page .article-mini{background:rgba(62,192,205,.08);color:#e5f0f2;}
+  .dark-page .article-mini .rt{color:#8c9ca2;}
+  .dark-page .draft-note{color:#8c9ca2;}
+  .dark-page .art-body{color:#bfd4d9;}
+  .dark-page .art-body h5{color:#fff;}
+  .dark-page .art-body b{color:#fff;}
+  .dark-page .ticket-card{background:linear-gradient(135deg,var(--teal),var(--teal-ink));}
+  .dark-page .rule-item{border-bottom-color:rgba(255,255,255,.06);color:#bfd4d9;}
+  .dark-page .rule-item b{color:#fff;}
+  .dark-page .rule-item svg{stroke:var(--teal);}
+  .dark-page .progress-label{color:#8c9ca2;}
+  .dark-page .progress-track{background:rgba(255,255,255,.08);}
+  .dark-page .step-photo .stepnum{color:#8fe0e8;opacity:.8;}
+  .dark-page .photo-slot .tag{background:rgba(0,0,0,.5);color:#fff;}
+
+  .topbar{display:flex;align-items:center;gap:12px;padding:20px 20px 8px;}
+  .back-btn{width:38px;height:38px;flex:none;border-radius:50%;background:var(--tealbg);border:none;display:flex;align-items:center;justify-content:center;color:var(--teal-ink);font-size:18px;cursor:pointer;transition:transform .12s;}
+  .back-btn:active{transform:scale(.92);}
+  .topbar h2{font-family:'Onest',sans-serif;font-weight:800;font-size:17px;margin:0;color:var(--ink);}
+
+  .pad{padding:0 20px;}
+  h1.section-title{font-family:'Onest',sans-serif;font-weight:800;font-size:24px;margin:8px 0 4px;color:var(--ink);letter-spacing:-.01em;}
+  .section-sub{font-size:13.5px;color:var(--body2);margin:0 0 16px;line-height:1.45;}
+  .photo-slot{border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(126,222,232,.1);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .photo-slot img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+  .photo-slot svg{width:30px;height:30px;opacity:.22;position:absolute;}
+  .photo-slot .tag{position:absolute;left:10px;bottom:10px;background:rgba(27,42,48,.55);color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:4px 8px;border-radius:100px;text-transform:uppercase;}
+  .step-card{margin-bottom:16px;}
+  .step-photo{aspect-ratio:4/3;position:relative;}
+  .step-photo .stepnum{position:absolute;top:10px;left:12px;font-family:'Onest',sans-serif;font-weight:800;font-size:30px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.25);z-index:2;}
+  .step-photo.ph .stepnum{color:var(--teal-ink);text-shadow:none;opacity:.55;}
+  .step-text{padding:12px 2px 0;}
+  .step-text h4{margin:0 0 3px;font-family:'Onest',sans-serif;font-weight:700;font-size:15px;color:var(--ink);}
+  .step-text p{margin:0;color:var(--body2);font-size:13.5px;line-height:1.4;}
+  .info-block{padding:13px 0;border-bottom:1px solid var(--line);}
+  .info-block:last-of-type{border-bottom:none;}
+  .info-block h4{margin:0 0 4px;font-family:'Onest',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink);}
+  .info-block p{margin:0;font-size:13px;color:var(--body2);line-height:1.5;}
+  .info-block.callout{background:var(--tealbg);border-radius:14px;padding:14px 16px;border-bottom:none;border-left:3px solid var(--teal);}
+  .info-block.callout h4{color:var(--teal-ink);}
+  .cta{display:block;width:100%;background:var(--ink);color:#fff;border:none;border-radius:16px;padding:16px;font-family:'Onest',sans-serif;font-weight:700;font-size:14.5px;cursor:pointer;margin-top:14px;transition:transform .12s, box-shadow .2s;}
+  .cta:active{transform:scale(.97);box-shadow:0 4px 12px rgba(0,0,0,.15);}
+  .cta.secondary{background:var(--tealbg);color:var(--teal-ink);}
+  .progress-wrap{padding:8px 20px 4px;}
+  .progress-track{height:5px;background:var(--line);border-radius:100px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--teal);border-radius:100px;transition:width .3s ease;}
+  .progress-label{font-size:11.5px;color:var(--mut);margin-top:7px;}
+  .q-title{font-family:'Onest',sans-serif;font-weight:800;font-size:20px;padding:20px 20px 16px;margin:0;line-height:1.28;color:var(--ink);}
+  .q-options{display:flex;flex-direction:column;gap:10px;padding:0 20px;}
+  .q-option{display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:15px 16px;font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;transition:.12s;}
+  .q-option .dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);flex:none;}
+  .q-option:active{border-color:var(--teal);background:var(--tealbg);}
+  .q-option:active .dot{border-color:var(--teal);background:var(--teal);}
+  .result-photo{aspect-ratio:16/10;position:relative;margin:0 0 0;}
+  .result-photo .overlay{position:absolute;inset:0;background:linear-gradient(0deg, rgba(16,25,29,.88) 10%, rgba(16,25,29,.25) 60%, rgba(16,25,29,.05) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:20px;}
+  .result-photo .overlay .eyebrow{color:#8fe0e8;}
+  .result-photo .overlay .stat{font-family:'Onest',sans-serif;font-weight:800;color:#fff;font-size:38px;line-height:1.02;margin:6px 0 10px;letter-spacing:-.01em;}
+  .stat-chips{display:flex;gap:8px;flex-wrap:wrap;}
+  .stat-chip{background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:100px;}
+  .result-oneliner{margin:14px 20px 0;font-size:13.5px;color:var(--teal-ink);background:var(--tealbg);border-radius:14px;padding:13px 15px;line-height:1.4;font-weight:600;}
+  .dodont{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px 4px;}
+  .dodont .col h5{font-size:12.5px;font-weight:700;margin:0 0 10px;font-family:'Onest',sans-serif;text-transform:uppercase;letter-spacing:.04em;}
+  .dodont .col.yes h5{color:var(--teal-ink);}
+  .dodont .col.no h5{color:var(--no);}
+  .dodont ul{list-style:none;margin:0;padding:0;}
+  .dodont li{display:flex;align-items:flex-start;gap:6px;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.35;margin-bottom:8px;}
+  .dodont li svg{width:15px;height:15px;flex:none;margin-top:1px;}
+  .dodont .col.yes svg{stroke:var(--teal-ink);}
+  .dodont .col.no svg{stroke:var(--no);}
+  .article-mini{display:flex;align-items:center;gap:10px;background:var(--tealbg);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--ink);}
+  .article-mini .rt{margin-left:auto;font-size:11px;color:var(--mut);font-weight:600;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;}
+  .toggle-row span{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .switch{width:44px;height:26px;background:var(--line);border-radius:100px;position:relative;cursor:pointer;transition:.15s;}
+  .switch.on{background:var(--teal);}
+  .switch .dot2{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .switch.on .dot2{left:21px;}
+  .article-card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:0 20px 14px;box-shadow:var(--shadow-card);}
+  .article-card .photo-slot{aspect-ratio:16/9;border-radius:0;background:#eef8f9;}
+  .article-card .photo-slot img{width:100%;height:100%;object-fit:cover;}
+  .article-card .body{padding:14px 16px 16px;}
+  .article-card h4{margin:0 0 4px;font-family:'Onest',sans-serif;font-weight:700;font-size:14.5px;color:var(--ink);}
+  .article-card p{margin:0;font-size:12.5px;color:var(--body2);line-height:1.4;}
+  .article-card .meta{font-size:11px;color:var(--mut);font-weight:600;display:block;margin-top:6px;}
+  .draft-note{margin:4px 20px 0;font-size:11.5px;color:var(--mut);text-align:center;}
+  .art-body{font-size:13.5px;color:var(--body2);line-height:1.65;}
+  .art-body p{margin:0 0 14px;}
+  .art-body h5{font-family:'Onest',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink);margin:4px 0 8px;}
+  .art-body ul{margin:0 0 14px;padding-left:18px;}
+  .art-body li{margin-bottom:6px;}
+  .art-body b{color:var(--ink);}
+  .art-photo{aspect-ratio:16/9;border-radius:16px;margin-bottom:16px;overflow:hidden;}
+  .art-photo img{width:100%;height:100%;object-fit:cover;}
+  .art-photo.half{aspect-ratio:4/3;}
+  .art-photo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+  .giveaway-photo{aspect-ratio:16/9;}
+  .ticket-card{background:linear-gradient(135deg,var(--teal) 0%,var(--teal-ink) 100%);border-radius:20px;margin:16px 20px 0;padding:20px;color:#fff;text-align:center;box-shadow:0 12px 30px rgba(37,150,163,.25);}
+  .ticket-card .count{font-family:'Onest',sans-serif;font-weight:800;font-size:36px;}
+  .ticket-card .lbl{font-size:12px;opacity:.9;margin-top:2px;}
+  .rule-item{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--body2);align-items:center;}
+  .rule-item:last-of-type{border-bottom:none;}
+  .rule-item b{color:var(--ink);}
+  .rule-item svg{width:18px;height:18px;flex:none;stroke:var(--teal-ink);}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;max-width:80%;text-align:center;z-index:10;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ==================== HOME ==================== -->
+  <div class="screen active" id="screen-home">
+    <div class="home-dark">
+      <div class="home-top">
+        <div class="word">LUMOO</div>
+        <div class="sub">Гель для отбеливания зубов</div>
+      </div>
+      <div class="showcase">
+        <div class="stage-glow"></div>
+        <img class="bottle-img" src="img/lumoo.png" alt="LUMOO">
+        <div class="reflect-wrap"><img src="img/lumoo.png" alt=""></div>
+        <div class="floor-glow"></div>
+      </div>
+      <div class="carousel-wrap" id="carouselWrap">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-card accent" style="position:relative;" onclick="startQuiz()">
+            <span class="tag-badge">Рекомендуем</span>
+            <div class="ic-circle"><svg viewBox="0 0 24 24"><path d="M12 2 14.59 8.36 21.51 8.72 15.97 12.94 18.18 19.54 12 15.77 5.82 19.54 8.03 12.94 2.49 8.72 9.41 8.36Z"/></svg></div>
+            <h4>Моя программа</h4>
+            <p>Персональный подбор ухода за зубами</p>
+            <div class="cta-pill">Получить рекомендации <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="carousel-card" onclick="showScreen('screen-instruction')">
+            <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3C12 3 6.5 10.7 6.5 15A5.5 5.5 0 0 0 12 20.5 5.5 5.5 0 0 0 17.5 15C17.5 10.7 12 3 12 3Z"/></svg></div>
+            <h4>Инструкция</h4>
+            <p>Как правильно использовать гель</p>
+            <div class="arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="carousel-card" onclick="showScreen('screen-articles')">
+            <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 4.5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg></div>
+            <h4>Полезные статьи</h4>
+            <p>Советы по уходу за зубами</p>
+            <div class="arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="carousel-card" onclick="showScreen('screen-giveaway')">
+            <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="1"/><path d="M4 9h16M12 9v11"/><path d="M12 9c-1.5-4-6-4-6-1.5S9 9 12 9Z"/><path d="M12 9c1.5-4 6-4 6-1.5S15 9 12 9Z"/></svg></div>
+            <h4>Розыгрыши</h4>
+            <p>Участвуйте и получайте подарки</p>
+            <div class="arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+        <div class="carousel-indicators" id="carouselIndicators"></div>
+      </div>
+      <div class="home-bottom">
+        <div class="word2">LUMOO</div>
+        <div class="desc">Профессиональный гель<br>для отбеливания зубов</div>
+        <div class="vol-pill">15 мл</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== INSTRUCTION ==================== -->
+  <div class="screen dark-page" id="screen-instruction">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-home')">‹</button>
+      <h2>Инструкция</h2>
+    </div>
+    <div class="pad">
+      <div class="eyebrow">3 ШАГА · ДОМА</div>
+      <h1 class="section-title">Три простых шага к улыбке</h1>
+      <p class="section-sub">Бережная процедура осветления эмали в домашних условиях.</p>
+    </div>
+    <div class="pad">
+      <div class="step-card">
+        <div class="photo-slot step-photo ph"><span class="stepnum">01</span><img src="img/step1.jpg" alt="Шаг 1"></div>
+        <div class="step-text"><h4>Подготовка</h4><p>Прополоскать рот тёплой водой.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="photo-slot step-photo ph"><span class="stepnum">02</span><img src="img/step2.jpg" alt="Шаг 2"></div>
+        <div class="step-text"><h4>Нанесение</h4><p>Кисточкой нанести небольшое количество средства и протирать поверхность зубов перед зеркалом.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="photo-slot step-photo ph"><span class="stepnum">03</span><img src="img/step3.jpg" alt="Шаг 3"></div>
+        <div class="step-text"><h4>Завершение</h4><p>Смыть тёплой водой.</p></div>
+      </div>
+    </div>
+    <div class="pad" style="margin-top:4px;">
+      <h1 class="section-title" style="font-size:17px;">Рекомендации и меры предосторожности</h1>
+      <div class="info-block"><h4>Перед использованием</h4><p>Убедитесь, что на дёснах и слизистой нет повреждений. Не превышайте рекомендуемое количество средства.</p></div>
+      <div class="info-block"><h4>Частота</h4><p>Для бережного эффекта используйте курсом, давая эмали отдых между применениями.</p></div>
+      <div class="info-block"><h4>Меры предосторожности</h4><p>Только для наружного применения. Избегайте попадания в глаза. Не глотать. При раздражении прекратите использование.</p></div>
+      <div class="info-block"><h4>Хранение</h4><p>Хранить в сухом прохладном месте, вдали от прямых солнечных лучей, в недоступном для детей месте.</p></div>
+      <div class="info-block callout"><h4>Важно</h4><p>При появлении дискомфорта или раздражения прекратите использование. При необходимости проконсультируйтесь со стоматологом.</p></div>
+      <button class="cta" onclick="startQuiz()">Начать индивидуальную программу</button>
+    </div>
+  </div>
+
+  <!-- ==================== QUIZ ==================== -->
+  <div class="screen dark-page" id="screen-quiz">
+    <div class="topbar">
+      <button class="back-btn" onclick="quizBack()">‹</button>
+      <h2>Моя программа</h2>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
+    <h3 class="q-title" id="qTitle"></h3>
+    <div class="q-options" id="qOptions"></div>
+  </div>
+
+  <!-- ==================== CONSULT ==================== -->
+  <div class="screen dark-page" id="screen-consult">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-home')">‹</button>
+      <h2>Моя программа</h2>
+    </div>
+    <div class="pad">
+      <h1 class="section-title">Прежде чем начать —</h1>
+      <p class="section-sub">Вы отметили пункт из списка ограничений (брекеты, виниры/коронки, беременность или кормление, кариес, воспаление дёсен). Программу пока не подбираем — лучше сначала посоветоваться со стоматологом.</p>
+      <div class="article-mini" onclick="openArticle('consult')" style="cursor:pointer;">📄 Почему стоит проконсультироваться перед курсом <span class="rt">3 мин</span></div>
+      <button class="cta secondary" onclick="showScreen('screen-instruction')">Посмотреть инструкцию</button>
+      <button class="cta" onclick="showScreen('screen-home')">На главную</button>
+    </div>
+  </div>
+
+  <!-- ==================== RESULT ==================== -->
+  <div class="screen dark-page" id="screen-result">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-home')">‹</button>
+      <h2>Ваша программа</h2>
+    </div>
+    <div class="photo-slot result-photo ph">
+      <img src="img/step1.jpg" alt="Результат" style="opacity:0.5;">
+      <div class="overlay">
+        <div class="eyebrow">ВАША СХЕМА</div>
+        <div class="stat" id="resStat"></div>
+        <div class="stat-chips" id="resChips"></div>
+      </div>
+    </div>
+    <div class="result-oneliner" id="resNote"></div>
+    <div class="dodont">
+      <div class="col yes"><h5>Можно</h5><ul id="doList"></ul></div>
+      <div class="col no"><h5>Не стоит</h5><ul id="dontList"></ul></div>
+    </div>
+    <div class="pad" style="margin-top:10px;">
+      <h1 class="section-title" style="font-size:15px;margin-bottom:8px;">Вам может быть полезно</h1>
+      <div id="articleLinks"></div>
+      <div class="toggle-row">
+        <span>Напоминать о днях процедуры</span>
+        <div class="switch" id="reminderSwitch" onclick="toggleReminder()"><div class="dot2"></div></div>
+      </div>
+      <button class="cta" onclick="showScreen('screen-home')">Готово</button>
+    </div>
+  </div>
+
+  <!-- ==================== ARTICLES ==================== -->
+  <div class="screen dark-page" id="screen-articles">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-home')">‹</button>
+      <h2>Статьи</h2>
+    </div>
+    <div class="pad" style="padding-bottom:4px;">
+      <p class="section-sub">База знаний по уходу за зубами — коротко и по делу.</p>
+    </div>
+    <div class="article-card" onclick="openArticle('care')">
+      <div class="photo-slot"><img src="img/aftercare.jpg" alt="Уход после отбеливания"></div>
+      <div class="body"><h4>Уход после отбеливания</h4><p>Что можно и нельзя в первые 48 часов.</p><span class="meta">4 мин чтения</span></div>
+    </div>
+    <div class="article-card" onclick="openArticle('diet')">
+      <div class="photo-slot"><img src="img/whitediet.jpg" alt="Белая диета"></div>
+      <div class="body"><h4>«Белая диета»</h4><p>Гид по продуктам, которые стоит ограничить после курса.</p><span class="meta">5 мин чтения</span></div>
+    </div>
+    <div class="article-card" onclick="openArticle('mistakes')">
+      <div class="photo-slot"><img src="img/mistakes.jpg" alt="Частые ошибки"></div>
+      <div class="body"><h4>Частые ошибки при отбеливании</h4><p>На что чаще всего не обращают внимания.</p><span class="meta">3 мин чтения</span></div>
+    </div>
+    <div class="article-card" onclick="openArticle('sensitivity')">
+      <div class="photo-slot"><img src="img/sensitivity.jpg" alt="Чувствительность зубов"></div>
+      <div class="body"><h4>Чувствительность зубов</h4><p>Причины и что с этим делать.</p><span class="meta">4 мин чтения</span></div>
+    </div>
+    <div class="article-card" onclick="openArticle('myths')">
+      <div class="photo-slot"><img src="img/myths.jpg" alt="Мифы об отбеливании"></div>
+      <div class="body"><h4>Мифы об отбеливании</h4><p>Разбираем самые частые заблуждения.</p><span class="meta">3 мин чтения</span></div>
+    </div>
+    <div class="draft-note">Тексты — рабочая версия, обложки заменим на реальные фото</div>
+  </div>
+
+  <!-- ==================== ARTICLE DETAIL ==================== -->
+  <div class="screen dark-page" id="screen-article">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-articles')">‹</button>
+      <h2 id="artTitle"></h2>
+    </div>
+    <div class="pad">
+      <span class="meta" id="artMeta" style="display:block;margin:2px 0 16px;color:var(--mut);font-size:11.5px;font-weight:600;"></span>
+      <div class="art-body" id="artBody"></div>
+    </div>
+  </div>
+
+  <!-- ==================== GIVEAWAY ==================== -->
+  <div class="screen dark-page" id="screen-giveaway">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-home')">‹</button>
+      <h2>Розыгрыш</h2>
+    </div>
+    <div class="pad"><div class="photo-slot giveaway-photo ph"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-ink)" stroke-width="1.5"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.8 1.8 0 0 0 0 3.6V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.9a1.8 1.8 0 0 0 0-3.6Z"/></svg></div></div>
+    <div class="ticket-card">
+      <div class="count" id="ticketCount">1</div>
+      <div class="lbl">ваш билет в текущем розыгрыше</div>
+    </div>
+    <div class="pad" style="margin-top:14px;">
+      <div class="rule-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.8 1.8 0 0 0 0 3.6V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.9a1.8 1.8 0 0 0 0-3.6Z"/></svg><span><b>Базовый билет</b> — за участие в розыгрыше</span></div>
+      <div class="rule-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 14 10 22 12 14 14 12 22 10 14 2 12 10 10Z"/></svg><span><b>+2 билета</b> — за отзыв с фото до/после на Wildberries</span></div>
+      <div class="rule-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>Итоги розыгрыша: <b>дата уточняется</b></span></div>
+      <button class="cta secondary" onclick="uploadReview()">Загрузить скрин отзыва (+2 билета)</button>
+      <button class="cta" onclick="participate()">Участвую</button>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== СТАТЬИ =====
+const ARTICLES = {
+  care: {
+    title: 'Уход после отбеливания',
+    meta: '4 мин чтения',
+    body: `<div class="photo-slot art-photo"><img src="img/aftercare.jpg" alt="Уход после отбеливания"></div>
+    <p>Первые 48 часов после процедуры — самое важное время. Эмаль ненадолго становится более восприимчивой к пигментам, поэтому именно сейчас проще всего закрепить или, наоборот, смазать результат.</p>
+    <h5>Лучше отложить</h5>
+    <ul><li>Кофе, чёрный и зелёный чай</li><li>Красное вино, тёмные соки</li><li>Соевый соус, кетчуп, карри</li><li>Ягоды и свёклу</li><li>Курение</li></ul>
+    <h5>Можно спокойно</h5>
+    <ul><li>Воду и молочные продукты</li><li>Белое мясо, рыбу, рис, картофель</li><li>Овощи светлых оттенков</li></ul>
+    <p>Чистите зубы мягкой щёткой, без сильного нажима. Лёгкая чувствительность в эти дни — нормальная временная реакция. Если она сильная и не проходит — сделайте паузу между применениями и, если не помогает, обратитесь к стоматологу.</p>`
+  },
+  diet: {
+    title: '«Белая диета»',
+    meta: '5 мин чтения',
+    body: `<p>«Белая диета» — это просто способ не окрашивать эмаль сразу после того, как она стала более восприимчивой к пигментам. Соблюдать её нужно не всю жизнь, а несколько часов после каждого применения геля в рамках курса.</p>
+    <h5>Высокий риск окрашивания</h5>
+    <div class="photo-slot art-photo half"><img src="img/whitediet.jpg" alt="Белая диета"></div>
+    <ul><li>Кофе, чай, кола</li><li>Вино и тёмные соки</li><li>Соевый соус, карри, томатная паста</li><li>Ягоды, свёкла</li></ul>
+    <h5>Лайфхаки</h5>
+    <ul><li>Пейте через трубочку — меньше контакта с эмалью</li><li>Ополаскивайте рот водой сразу после еды или напитков</li><li>Старайтесь не есть и не пить хотя бы час после процедуры</li></ul>`
+  },
+  mistakes: {
+    title: 'Частые ошибки при отбеливании',
+    meta: '3 мин чтения',
+    body: `<div class="photo-slot art-photo"><img src="img/mistakes.jpg" alt="Частые ошибки"></div>
+    <p>Вот что чаще всего мешает получить ровный и комфортный результат:</p>
+    <ul>
+      <li><b>Наносить больше «для скорости».</b> Результат от этого не ускоряется, а риск раздражения — растёт.</li>
+      <li><b>Не давать эмали отдых.</b> Курс работает по накоплению, а не за одно применение.</li>
+      <li><b>Игнорировать противопоказания.</b> При кариесе или воспалении дёсен — сначала к стоматологу.</li>
+      <li><b>Есть и пить красящее сразу после процедуры.</b> Именно тогда эффект проще всего свести на нет.</li>
+      <li><b>Ждать мгновенного эффекта.</b> Отбеливание — это курс, а не одно применение.</li>
+    </ul>`
+  },
+  sensitivity: {
+    title: 'Чувствительность зубов',
+    meta: '4 мин чтения',
+    body: `<div class="photo-slot art-photo"><img src="img/sensitivity.jpg" alt="Чувствительность зубов"></div>
+    <p>Чувствительность — реакция на температуру, кислое или сладкое, когда дентин под эмалью оголяется сильнее обычного. Это может быть особенностью зубов или следствием слишком жёсткой щётки и кислых продуктов.</p>
+    <p>При отбеливании лёгкая временная чувствительность — частая, но обычно проходящая реакция.</p>
+    <h5>Что помогает</h5>
+    <ul><li>Схема через день вместо ежедневной</li><li>Более короткая выдержка геля</li><li>Паста для чувствительных зубов между процедурами</li></ul>
+    <p>LUMOO создан с учётом чувствительных зубов — поэтому в приложении есть «Моя программа»: она подбирает бережную схему индивидуально.</p>
+    <p>Если чувствительность сильная и не проходит — стоит показаться стоматологу.</p>`
+  },
+  myths: {
+    title: 'Мифы об отбеливании',
+    meta: '3 мин чтения',
+    body: `<div class="photo-slot art-photo"><img src="img/myths.jpg" alt="Мифы об отбеливании"></div>
+    <p><b>Миф:</b> отбеливание разрушает эмаль.<br><b>Факт:</b> при соблюдении курса — нет. Чувствительность, если и появляется, обычно временная.</p>
+    <p><b>Миф:</b> чем чаще применять, тем быстрее результат.<br><b>Факт:</b> избыточное использование не ускоряет эффект, а увеличивает риск раздражения.</p>
+    <p><b>Миф:</b> после процедуры можно есть и пить что угодно.<br><b>Факт:</b> первые часы эмаль более восприимчива к пигментам — отсюда и «белая диета».</p>
+    <p><b>Миф:</b> схема применения одинаковая для всех.<br><b>Факт:</b> зависит от чувствительности и привычек — поэтому в LUMOO есть индивидуальная программа.</p>
+    <p><b>Миф:</b> результат остаётся навсегда после одного курса.<br><b>Факт:</b> оттенок поддерживается уходом, со временем может понадобиться повторный курс.</p>`
+  },
+  consult: {
+    title: 'Почему стоит проконсультироваться заранее',
+    meta: '3 мин чтения',
+    body: `<div class="photo-slot art-photo"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-ink)" stroke-width="1.5"><circle cx="12" cy="12" r="8"/></svg></div>
+    <p>Если есть брекеты, виниры или коронки на передних зубах, кариес, воспаление дёсен, беременность или кормление — лучше сначала показаться стоматологу.</p>
+    <p>Дело не в том, что гель «нельзя» — а в том, что в этих случаях схему и комфортность применения лучше подбирать вместе со специалистом, который видит полную картину состояния зубов и дёсен.</p>
+    <p>Как только ограничение снято или ситуация проверена — можно спокойно пройти тест «Моя программа» и получить индивидуальную схему.</p>`
+  }
+};
+
+function openArticle(id){
+  const a = ARTICLES[id];
+  document.getElementById('artTitle').textContent = a.title;
+  document.getElementById('artMeta').textContent = a.meta;
+  document.getElementById('artBody').innerHTML = a.body;
+  showScreen('screen-article');
+}
+
+// ===== КВИЗ =====
+const questions = [
+  {id:'q1', title:'Была ли раньше чувствительность зубов?', options:[
+    {v:'none', t:'Нет'}, {v:'sometimes', t:'Иногда'}, {v:'yes', t:'Да, выраженная'}
+  ]},
+  {id:'q2', title:'Есть что-то из этого: брекеты, виниры/коронки, беременность или кормление, кариес, воспаление дёсен?', options:[
+    {v:'none', t:'Ничего из этого'}, {v:'has', t:'Да, есть один или несколько пунктов'}
+  ]},
+  {id:'q3', title:'Из-за чего в основном темнеет эмаль?', options:[
+    {v:'coffee', t:'Кофе / чай'}, {v:'smoking', t:'Курение'}, {v:'wine', t:'Вино'}, {v:'age', t:'Возрастное потемнение'}, {v:'rare', t:'Редко ухаживаю за зубами'}
+  ]},
+  {id:'q4', title:'Пользовались раньше отбеливающими продуктами?', options:[
+    {v:'never', t:'Никогда'}, {v:'home', t:'Домашние средства (полоски/пасты)'}, {v:'dentist', t:'У стоматолога'}
+  ]},
+  {id:'q5', title:'Что для вас важнее?', options:[
+    {v:'fast', t:'Быстрый результат'}, {v:'gentle', t:'Бережно и постепенно'}
+  ]},
+  {id:'q6', title:'Как часто в жизни красящие напитки/привычки (кофе, чай, вино, курение)?', options:[
+    {v:'often', t:'Часто'}, {v:'sometimes', t:'Иногда'}, {v:'rarely', t:'Редко'}
+  ]},
+];
+
+let qIndex = 0;
+let answers = {};
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+const CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startQuiz(){
+  qIndex = 0;
+  answers = {};
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = questions[qIndex];
+  document.getElementById('progressFill').style.width = (qIndex/questions.length*100) + '%';
+  document.getElementById('progressLabel').textContent = 'Вопрос ' + (qIndex+1) + ' из ' + questions.length;
+  document.getElementById('qTitle').textContent = q.title;
+  const opts = document.getElementById('qOptions');
+  opts.innerHTML = '';
+  q.options.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'q-option';
+    btn.innerHTML = '<span class="dot"></span><span>'+o.t+'</span>';
+    btn.onclick = () => selectAnswer(q.id, o.v);
+    opts.appendChild(btn);
+  });
+}
+
+function selectAnswer(id, value){
+  answers[id] = value;
+  if(id === 'q2' && value === 'has'){
+    showScreen('screen-consult');
+    return;
+  }
+  if(qIndex < questions.length - 1){
+    qIndex++;
+    renderQuestion();
+  } else {
+    buildResult();
+    showScreen('screen-result');
+  }
+}
+
+function quizBack(){
+  if(qIndex === 0){
+    showScreen('screen-home');
+  } else {
+    qIndex--;
+    renderQuestion();
+  }
+}
+
+function buildResult(){
+  const gentleStart = (answers.q1 === 'yes') || (answers.q5 === 'gentle');
+  let stat, chips, note;
+
+  if(gentleStart){
+    stat = 'Через день';
+    chips = ['Выдержка · короче', 'Старт · бережный'];
+    note = 'LUMOO создан для чувствительных зубов — эта схема комфортна с первого дня.';
+  } else {
+    stat = 'Ежедневно';
+    chips = ['Выдержка · стандартная', 'Старт · активный'];
+    note = 'Чувствительность не отмечена — начинаем со стандартной схемы.';
+  }
+
+  if(answers.q4 === 'dentist') chips.push('Курс · 7 дней');
+  else if(answers.q4 === 'home') chips.push('Курс · 10 дней');
+  else chips.push('Курс · 14 дней');
+
+  const doMap = {
+    coffee:'Пить кофе/чай через трубочку', smoking:'Сократить сигареты в дни курса', wine:'Заменить вино на светлые напитки',
+    age:'Соблюдать регулярность курса', rare:'Чистить зубы 2 раза в день'
+  };
+  const doList = [doMap[answers.q3], 'Делать паузы при дискомфорте'];
+  const dontList = ['Превышать количество геля', 'Использовать при повреждении дёсен'];
+  if(answers.q6 === 'often') dontList.unshift('Красящее сразу после процедуры');
+
+  document.getElementById('resStat').textContent = stat;
+  document.getElementById('resChips').innerHTML = chips.map(c => '<span class="stat-chip">'+c+'</span>').join('');
+  document.getElementById('resNote').textContent = note;
+  document.getElementById('doList').innerHTML = doList.map(i => '<li>'+CHECK+'<span>'+i+'</span></li>').join('');
+  document.getElementById('dontList').innerHTML = dontList.map(i => '<li>'+CROSS+'<span>'+i+'</span></li>').join('');
+
+  const articleRefs = [{id:'care', label:'Уход после отбеливания'}, answers.q1 === 'yes' ? {id:'sensitivity', label:'Чувствительность зубов'} : {id:'diet', label:'«Белая диета»'}];
+  document.getElementById('articleLinks').innerHTML = articleRefs.map(a =>
+    '<div class="article-mini" style="cursor:pointer;" onclick="openArticle(\''+a.id+'\')">📄 '+a.label+'<span class="rt">4 мин</span></div>'
+  ).join('');
+}
+
+function toggleReminder(){
+  document.getElementById('reminderSwitch').classList.toggle('on');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function uploadReview(){
+  document.getElementById('ticketCount').textContent = '3';
+  showToast('Скрин отзыва принят — начислено +2 билета');
+}
+
+function participate(){
+  showToast('Вы участвуете в розыгрыше!');
+}
+
+// ===== КАРУСЕЛЬ С ПОДДЕРЖКОЙ СВАЙПА =====
+let currentSlide = 0;
+const track = document.getElementById('carouselTrack');
+const cards = track.querySelectorAll('.carousel-card');
+const totalCards = cards.length;
+const indicators = document.getElementById('carouselIndicators');
+let autoSlideInterval = null;
+const AUTO_INTERVAL = 3500;
+
+// Создаём индикаторы
+for (let i = 0; i < totalCards; i++) {
+  const dot = document.createElement('span');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.dataset.index = i;
+  dot.addEventListener('click', function(e) {
+    e.stopPropagation();
+    goToSlide(i);
+    resetAutoSlide();
+  });
+  indicators.appendChild(dot);
+}
+
+function goToSlide(index) {
+  if (index < 0) index = totalCards - 1;
+  if (index >= totalCards) index = 0;
+  currentSlide = index;
+  const container = track.parentElement;
+  const containerStyle = getComputedStyle(container);
+  const paddingLeft = parseFloat(containerStyle.paddingLeft);
+  const paddingRight = parseFloat(containerStyle.paddingRight);
+  const containerWidth = container.clientWidth - paddingLeft - paddingRight;
+  const cardWidth = cards[0].offsetWidth;
+  const gap = parseFloat(getComputedStyle(track).gap) || 0;
+  const offset = (containerWidth - cardWidth) / 2 - index * (cardWidth + gap);
+  track.style.transform = `translateX(${offset}px)`;
+  cards.forEach((card, i) => {
+    card.classList.toggle('active-card', i === index && !card.classList.contains('accent'));
+  });
+  document.querySelectorAll('.carousel-indicators .dot').forEach((d, i) => {
+    d.classList.toggle('active', i === currentSlide);
+  });
+}
+
+function resetAutoSlide() {
+  if (autoSlideInterval) {
+    clearInterval(autoSlideInterval);
+    autoSlideInterval = null;
+  }
+  autoSlideInterval = setInterval(() => {
+    goToSlide((currentSlide + 1) % totalCards);
+  }, AUTO_INTERVAL);
+}
+
+// === ОБРАБОТКА СВАЙПА ===
+let touchStartX = 0;
+let touchStartY = 0;
+let isSwiping = false;
+const wrap = document.getElementById('carouselWrap');
+
+wrap.addEventListener('touchstart', function(e) {
+  const touch = e.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  isSwiping = false;
+}, { passive: true });
+
+wrap.addEventListener('touchmove', function(e) {
+  if (touchStartX === 0) return;
+  const touch = e.touches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 15) {
+    isSwiping = true;
+    e.preventDefault(); // отключаем скролл страницы
+  }
+}, { passive: false });
+
+wrap.addEventListener('touchend', function(e) {
+  if (!isSwiping || touchStartX === 0) {
+    touchStartX = 0;
+    return;
+  }
+  const touch = e.changedTouches[0];
+  const deltaX = touch.clientX - touchStartX;
+  if (Math.abs(deltaX) > 40) {
+    if (deltaX < 0) {
+      goToSlide(currentSlide + 1);
+    } else {
+      goToSlide(currentSlide - 1);
+    }
+    resetAutoSlide();
+  }
+  touchStartX = 0;
+  isSwiping = false;
+}, { passive: true });
+
+// Сброс таймера при клике на карточку
+cards.forEach(card => {
+  card.addEventListener('click', function() {
+    resetAutoSlide();
+  });
+});
+
+// Пересчёт при ресайзе
+let resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    goToSlide(currentSlide);
+  }, 100);
+});
+
+// Запуск
+setTimeout(() => {
+  goToSlide(0);
+  resetAutoSlide();
+}, 200);
+</script>
+</body>
+</html>
